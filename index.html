@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>絵しりとり (パス＆プレイ)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <h1>🎨 1台で絵しりとり</h1>
+    </header>
+
+    <!-- 1. ロビー画面（プレイヤー登録・設定） -->
+    <section id="screen-lobby" class="screen active">
+      <div class="card center-card">
+        <h2>参加者と設定</h2>
+        
+        <div class="input-group">
+          <label for="input-player-name">プレイヤー名を追加</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="input-player-name" placeholder="例: たろう" maxlength="10">
+            <button id="btn-add-player" class="btn btn-primary">追加</button>
+          </div>
+        </div>
+
+        <div class="players-section">
+          <h3>参加メンバー (<span id="player-count">0</span>人)</h3>
+          <ul id="setup-player-list" class="player-list"></ul>
+        </div>
+
+        <div class="input-group">
+          <label for="input-rounds">周回数</label>
+          <select id="input-rounds">
+            <option value="1">1周</option>
+            <option value="2" selected>2周</option>
+            <option value="3">3周</option>
+          </select>
+        </div>
+
+        <button id="btn-start-game" class="btn btn-success btn-block btn-lg" style="margin-top: 15px;">ゲームをはじめる！</button>
+      </div>
+    </section>
+
+    <!-- 2. ターン交代・パス画面（次の人に渡す時の画面） -->
+    <section id="screen-pass" class="screen">
+      <div class="card center-card pass-card">
+        <div class="pass-icon">🔄</div>
+        <h2>端末を回してください</h2>
+        <p class="pass-instruction">次は <strong id="next-player-name" class="highlight-name">---</strong> さん の番です！</p>
+        <p class="sub-hint">前の人の答えを見られないように、本人に端末を渡してからボタンを押してください。</p>
+        <button id="btn-ready-turn" class="btn btn-success btn-block btn-lg" style="margin-top: 20px;">準備OK！描く画面に進む</button>
+      </div>
+    </section>
+
+    <!-- 3. ゲーム画面（お絵かき＆答え入力） -->
+    <section id="screen-game" class="screen">
+      <div class="progress-bar-container">
+        <div class="progress-info">
+          <span>ターン <span id="current-turn-num">1</span> / <span id="total-turns-num">0</span></span>
+          <span>描く人: <strong id="current-player-name">---</strong></span>
+        </div>
+      </div>
+
+      <!-- 履歴タイムライン -->
+      <div class="card timeline-card">
+        <h3>📜 ここまでの流れ</h3>
+        <p class="timeline-subtext">※前の人が何を描いたか確認して、しりとりを続けよう！</p>
+        <div id="history-timeline" class="history-timeline">
+          <!-- 履歴がここに入ります -->
+        </div>
+      </div>
+
+      <!-- お絵かきキャンバス -->
+      <div class="card game-card">
+        <h2 id="canvas-instruction">🎨 絵を描こう！</h2>
+        <div class="canvas-container">
+          <canvas id="paint-canvas" width="400" height="400"></canvas>
+        </div>
+
+        <!-- ツールバー -->
+        <div class="canvas-tools">
+          <div class="tool-group">
+            <label>色:</label>
+            <input type="color" id="color-picker" value="#000000">
+            <button class="btn-color-preset" style="background:#000000" data-color="#000000"></button>
+            <button class="btn-color-preset" style="background:#ff0000" data-color="#ff0000"></button>
+            <button class="btn-color-preset" style="background:#0000ff" data-color="#0000ff"></button>
+            <button class="btn-color-preset" style="background:#008000" data-color="#008000"></button>
+            <button class="btn-color-preset" style="background:#ffa500" data-color="#ffa500"></button>
+          </div>
+          <div class="tool-group">
+            <label>太さ:</label>
+            <input type="range" id="brush-size" min="1" max="30" value="5">
+          </div>
+          <div class="tool-group">
+            <button id="btn-pencil" class="btn btn-sm active-tool">✏️ ペン</button>
+            <button id="btn-bucket" class="btn btn-sm">🪣 塗りつぶし</button>
+            <button id="btn-eraser" class="btn btn-sm">🧹 消しゴム</button>
+            <button id="btn-undo" class="btn btn-sm">↩️ 戻す</button>
+            <button id="btn-clear" class="btn btn-sm btn-danger">全消去</button>
+          </div>
+        </div>
+
+        <!-- 答え入力フォーム -->
+        <div class="input-group" style="margin-top: 15px;">
+          <label for="input-answer">今、何を描いた？ (答えの文字)</label>
+          <input type="text" id="input-answer" placeholder="例: りんご" maxlength="20">
+        </div>
+
+        <button id="btn-submit-turn" class="btn btn-primary btn-block btn-lg">描き終えた！次の人に渡す ➔</button>
+      </div>
+    </section>
+
+    <!-- 4. 結果画面 (答え合わせ) -->
+    <section id="screen-result" class="screen">
+      <div class="card center-card">
+        <h2>🎉 答え合わせタイム！</h2>
+        <p style="color: #666; margin-bottom: 20px;">みんなでしりとりが繋がっているか確認しよう！</p>
+
+        <div id="result-list" class="result-list">
+          <!-- 結果リストが生成されます -->
+        </div>
+
+        <button id="btn-back-lobby" class="btn btn-primary btn-block btn-lg" style="margin-top: 25px;">もう一度遊ぶ</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
